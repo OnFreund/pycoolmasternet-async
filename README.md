@@ -27,8 +27,14 @@ info = await cool.info()
 # Returns a dict of CoolMasterNetUnit objects. Keys are the unit IDs
 units = await cool.status()
 
+# turn on / off all units
+await cool.turn_on()
+await cool.turn_off()
+
+# get a specific unit and control / query it
 unit = units["L1.001"]
 
+# get unit id
 unit.unit_id
 
 # Temperature unit: Imperial, Celsius
@@ -48,13 +54,23 @@ unit.is_on
 unit = await unit.turn_on()
 unit = await unit.turn_off()
 
-# Fan speed: low, med, high, auto
+# unit fan speeds - a list of supported fan speeds of that unit (e.g. ['low', 'med', 'high'])
+unit.fan_speeds
+
+# Fan speed: very low, low, med, high, top, auto 
 unit.fan_speed
 unit = await unit.set_fan_speed('med')
 
-# Mode of operation: auto, cool, dry, fan, heat
+# unit modes - a list of supported operation modes (e.g. ['auto', 'cool', 'dry', 'fan', 'heat'])
+unit.modes
+
+# Unit mode of operation: auto, cool, dry, fan, heat
 unit.mode
 unit = await unit.set_mode('cool')
+
+# unit name - friendly name defined in CoolMasterNet
+unit.name
+
 
 # Get fresh info
 unit = await unit.refresh()
