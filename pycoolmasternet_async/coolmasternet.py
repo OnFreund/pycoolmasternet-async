@@ -19,7 +19,8 @@ SWING_MODES = list(_SWING_CHAR_TO_NAME.values())
 
 class CoolMasterNet():
     """A connection to a coolmasternet bridge."""
-    def __init__(self, host, port=10102, read_timeout=1, swing_support=False):
+    def __init__(self, host, port=10102, read_timeout=1, swing_support=False,
+                 wait_for_prompt=True):
         """Initialize this CoolMasterNet instance to connect to a particular
         host at a particular port."""
         self._host = host
@@ -28,6 +29,7 @@ class CoolMasterNet():
         self._swing_support = swing_support
         self._status_cmd = None
         self._concurrent_reads = asyncio.Semaphore(3)
+        self._wait_for_prompt = wait_for_prompt
 
     async def _make_request(self, request):
         """Send a request to the CoolMasterNet and returns the response."""
@@ -36,13 +38,16 @@ class CoolMasterNet():
             reader, writer = await asyncio.open_connection(self._host, self._port)
 
             try:
+                if self._wait_for_prompt:
+                    prompt = await asyncio.wait_for(reader.readuntil(b">"), self._read_timeout)
+                    if prompt != b">":
+                        raise Exception("CoolMasterNet prompt not found")
+
+
                 writer.write((request + "\n").encode("ascii"))
                 response = await asyncio.wait_for(reader.readuntil(b"\n>"), self._read_timeout)
 
                 data = response.decode("ascii")
-
-                if data.startswith(">"):
-                    data = data[1:]
 
                 if data.endswith("\n>"):
                     data = data[:-1]
