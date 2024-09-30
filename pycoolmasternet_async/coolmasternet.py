@@ -36,16 +36,15 @@ class CoolMasterNet():
             reader, writer = await asyncio.open_connection(self._host, self._port)
 
             try:
+                writer.write(("\n").encode("ascii"))
+                prompt = await asyncio.wait_for(reader.readuntil(b"\n>"), self._read_timeout)
+                if not prompt.endswith("\r\n>"):
+                    raise ConnectionError(f"CoolMasterNet prompt not found: {prompt}")
+
                 writer.write((request + "\n").encode("ascii"))
                 response = await asyncio.wait_for(reader.readuntil(b"\n>"), self._read_timeout)
 
-                data = response.decode("ascii")
-
-                if data.startswith(">"):
-                    data = data[1:]
-
-                if data.endswith("\n>"):
-                    data = data[:-1]
+                data = response.decode("ascii")[:-1]
 
                 if data.endswith("OK\r\n"):
                     data = data[:-4]
@@ -144,7 +143,8 @@ class CoolMasterNetUnit():
 
     async def refresh(self):
         """Refresh the data from CoolMasterNet and return it as a new instance."""
-        return (await CoolMasterNetUnit.create(self._bridge, self._unit_id))[0]
+        return (await CoolMasterNetUnit.create(self._bridge, self._unit_id,
+                                               status_cmd=self._status_cmd))[0]
 
     @property
     def unit_id(self):
