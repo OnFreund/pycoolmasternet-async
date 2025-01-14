@@ -1,5 +1,6 @@
 import asyncio
 import re
+import sys
 
 _MODES = ["auto", "cool", "dry", "fan", "heat"]
 
@@ -19,13 +20,14 @@ SWING_MODES = list(_SWING_CHAR_TO_NAME.values())
 
 class CoolMasterNet():
     """A connection to a coolmasternet bridge."""
-    def __init__(self, host, port=10102, read_timeout=1, swing_support=False):
+    def __init__(self, host, port=10102, read_timeout=1, swing_support=False, send_initial_line_feed=False):
         """Initialize this CoolMasterNet instance to connect to a particular
         host at a particular port."""
         self._host = host
         self._port = port
         self._read_timeout = read_timeout
         self._swing_support = swing_support
+        self._send_initial_linefeed = send_initial_line_feed
         self._status_cmd = None
         self._concurrent_reads = asyncio.Semaphore(3)
 
@@ -36,8 +38,14 @@ class CoolMasterNet():
             reader, writer = await asyncio.open_connection(self._host, self._port)
 
             try:
-                prompt = await asyncio.wait_for(reader.readuntil(b">"), self._read_timeout)
-                if prompt != b">":
+                if self._send_initial_linefeed:
+                    writer.write(("\n").encode("ascii"))
+                    awaited = (b"\r\n>", b">>")
+                else:
+                    awaited = (b">",)
+                    
+                prompt = await asyncio.wait_for(reader.readuntil(awaited), self._read_timeout)
+                if prompt not in awaited:
                     raise ConnectionError("CoolMasterNet prompt not found")
 
                 writer.write((request + "\n").encode("ascii"))
@@ -145,7 +153,7 @@ class CoolMasterNetUnit():
 
     async def refresh(self):
         """Refresh the data from CoolMasterNet and return it as a new instance."""
-        return (await CoolMasterNetUnit.create(self._bridge, self._unit_id))[0]
+        return (await CoolMasterNetUnit.create(self._bridge, self._unit_id, None, self._status_cmd))[0]
 
     @property
     def unit_id(self):
