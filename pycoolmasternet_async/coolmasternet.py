@@ -43,7 +43,7 @@ class CoolMasterNet():
                     awaited = (b"\r\n>", b">>")
                 else:
                     awaited = (b">",)
-                    
+
                 prompt = await asyncio.wait_for(reader.readuntil(awaited), self._read_timeout)
                 if prompt not in awaited:
                     raise ConnectionError("CoolMasterNet prompt not found")
