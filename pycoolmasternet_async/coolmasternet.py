@@ -1,6 +1,5 @@
 import asyncio
 import re
-import sys
 
 _MODES = ["auto", "cool", "dry", "fan", "heat"]
 
