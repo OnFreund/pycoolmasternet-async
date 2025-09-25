@@ -36,13 +36,14 @@ class CoolMasterNet():
             reader, writer = await asyncio.open_connection(self._host, self._port)
 
             try:
+                prompt = await asyncio.wait_for(reader.readuntil(b">"), self._read_timeout)
+                if prompt != b">":
+                    raise ConnectionError("CoolMasterNet prompt not found")
+
                 writer.write((request + "\n").encode("ascii"))
                 response = await asyncio.wait_for(reader.readuntil(b"\n>"), self._read_timeout)
 
                 data = response.decode("ascii")
-
-                if data.startswith(">"):
-                    data = data[1:]
 
                 if data.endswith("\n>"):
                     data = data[:-1]
