@@ -39,13 +39,14 @@ class CoolMasterNet():
             try:
                 if self._send_initial_line_feed:
                     writer.write(("\n").encode("ascii"))
-                    awaited = (b"\r\n>", b">>")
-                else:
-                    awaited = (b">",)
+                    prompt = await asyncio.wait_for(reader.readuntil((b"\r\n>", b">>")), self._read_timeout)
+                    if prompt not in (b"\r\n>", b">>"):
+                        raise ConnectionError("CoolMasterNet prompt not found")
 
-                prompt = await asyncio.wait_for(reader.readuntil(awaited), self._read_timeout)
-                if prompt not in awaited:
-                    raise ConnectionError("CoolMasterNet prompt not found")
+                else:
+                    prompt = await asyncio.wait_for(reader.readuntil(b">"), self._read_timeout)
+                    if prompt != b">":
+                        raise ConnectionError("CoolMasterNet prompt not found")
 
                 writer.write((request + "\n").encode("ascii"))
                 response = await asyncio.wait_for(reader.readuntil(b"\n>"), self._read_timeout)
