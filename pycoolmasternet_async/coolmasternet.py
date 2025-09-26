@@ -26,7 +26,7 @@ class CoolMasterNet():
         self._port = port
         self._read_timeout = read_timeout
         self._swing_support = swing_support
-        self._send_initial_linefeed = send_initial_line_feed
+        self._send_initial_line_feed = send_initial_line_feed
         self._status_cmd = None
         self._concurrent_reads = asyncio.Semaphore(3)
 
@@ -37,7 +37,7 @@ class CoolMasterNet():
             reader, writer = await asyncio.open_connection(self._host, self._port)
 
             try:
-                if self._send_initial_linefeed:
+                if self._send_initial_line_feed:
                     writer.write(("\n").encode("ascii"))
                     awaited = (b"\r\n>", b">>")
                 else:
