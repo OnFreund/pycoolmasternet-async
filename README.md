@@ -9,7 +9,7 @@ You can install pycoolmasternet-async from [PyPI](https://pypi.org/project/pycoo
 
     pip3 install pycoolmasternet-async
 
-Python 3.7 and above are supported.
+Python 3.13 and above are supported.
 
 
 ## How to use
