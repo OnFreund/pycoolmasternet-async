@@ -18,7 +18,7 @@ URL = 'https://github.com/OnFreund/pycoolmasternet-async'
 EMAIL = 'onfreund@gmail.com'
 AUTHOR = 'On Freund'
 REQUIRES_PYTHON = '>=3.13.0'
-VERSION = '0.2.3'
+VERSION = '0.2.4'
 
 REQUIRED = []
 
