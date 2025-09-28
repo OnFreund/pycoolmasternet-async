@@ -19,13 +19,14 @@ SWING_MODES = list(_SWING_CHAR_TO_NAME.values())
 
 class CoolMasterNet():
     """A connection to a coolmasternet bridge."""
-    def __init__(self, host, port=10102, read_timeout=1, swing_support=False):
+    def __init__(self, host, port=10102, read_timeout=1, swing_support=False, send_initial_line_feed=False):
         """Initialize this CoolMasterNet instance to connect to a particular
         host at a particular port."""
         self._host = host
         self._port = port
         self._read_timeout = read_timeout
         self._swing_support = swing_support
+        self._send_initial_line_feed = send_initial_line_feed
         self._status_cmd = None
         self._concurrent_reads = asyncio.Semaphore(3)
 
@@ -36,9 +37,16 @@ class CoolMasterNet():
             reader, writer = await asyncio.open_connection(self._host, self._port)
 
             try:
-                prompt = await asyncio.wait_for(reader.readuntil(b">"), self._read_timeout)
-                if prompt != b">":
-                    raise ConnectionError("CoolMasterNet prompt not found")
+                if self._send_initial_line_feed:
+                    writer.write(("\n").encode("ascii"))
+                    prompt = await asyncio.wait_for(reader.readuntil((b"\r\n>", b">>")), self._read_timeout)
+                    if prompt not in (b"\r\n>", b">>"):
+                        raise ConnectionError("CoolMasterNet prompt not found")
+
+                else:
+                    prompt = await asyncio.wait_for(reader.readuntil(b">"), self._read_timeout)
+                    if prompt != b">":
+                        raise ConnectionError("CoolMasterNet prompt not found")
 
                 writer.write((request + "\n").encode("ascii"))
                 response = await asyncio.wait_for(reader.readuntil(b"\n>"), self._read_timeout)

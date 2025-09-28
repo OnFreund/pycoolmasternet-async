@@ -17,7 +17,7 @@ DESCRIPTION = 'A python library to control CoolMasterNet HVAC bridges over async
 URL = 'https://github.com/OnFreund/pycoolmasternet-async'
 EMAIL = 'onfreund@gmail.com'
 AUTHOR = 'On Freund'
-REQUIRES_PYTHON = '>=3.7.0'
+REQUIRES_PYTHON = '>=3.13.0'
 VERSION = '0.2.3'
 
 REQUIRED = []
@@ -110,7 +110,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.13',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy'
     ],
