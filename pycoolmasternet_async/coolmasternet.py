@@ -153,7 +153,7 @@ class CoolMasterNetUnit():
 
     async def refresh(self):
         """Refresh the data from CoolMasterNet and return it as a new instance."""
-        return (await CoolMasterNetUnit.create(self._bridge, self._unit_id))[0]
+        return (await CoolMasterNetUnit.create(self._bridge, self._unit_id, None, self._status_cmd))[0]
 
     @property
     def unit_id(self):
