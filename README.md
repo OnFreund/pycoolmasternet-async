@@ -56,6 +56,10 @@ unit = await unit.set_fan_speed('med')
 unit.mode
 unit = await unit.set_mode('cool')
 
+# True while the unit is actively calling for heating/cooling, False when it
+# is on but idle. None if the bridge's status format doesn't report demand.
+unit.demand
+
 # Get fresh info
 unit = await unit.refresh()
 
