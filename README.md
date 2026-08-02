@@ -60,3 +60,16 @@ unit = await unit.set_mode('cool')
 unit = await unit.refresh()
 
 ```
+
+## Errors
+
+Errors raised by this library derive from `CoolMasterNetError`:
+
+- `CoolMasterNetConnectionError` - the bridge could not be reached, or did not
+  answer as expected. Also a `ConnectionError`, and so an `OSError`.
+- `CoolMasterNetCommandError` - the bridge rejected a command. Also a `ValueError`.
+
+They subclass the builtins previously raised, so existing `except OSError` or
+`except ValueError` handlers keep working. Note that connection failures raised
+by `asyncio` itself (for example `TimeoutError`, or `socket.gaierror` for an
+unresolvable host) still propagate as plain `OSError` subclasses.
