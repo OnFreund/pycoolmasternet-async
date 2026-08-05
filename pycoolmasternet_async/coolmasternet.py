@@ -149,7 +149,7 @@ class CoolMasterNetUnit():
         # Only the 9-field form (ls/ls2) carries the demand flag as the last
         # field. The 8-field form (stat2) stops at the filter sign, so demand
         # is unknown there rather than assumed to be off.
-        self._demand = fields[8] != "0" if len(fields) == 9 else None
+        self._demand = fields[8] != "0" if len(fields) > 8 else None
         self._swing = _SWING_CHAR_TO_NAME.get(self._swing_raw)
 
     async def _make_unit_request(self, request):
