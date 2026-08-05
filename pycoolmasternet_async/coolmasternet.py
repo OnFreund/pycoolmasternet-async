@@ -17,6 +17,27 @@ _SWING_NAME_TO_CHAR = {value: key for key, value in _SWING_CHAR_TO_NAME.items()}
 
 SWING_MODES = list(_SWING_CHAR_TO_NAME.values())
 
+
+class CoolMasterNetError(Exception):
+    """Base class for errors raised by this library."""
+
+
+class CoolMasterNetConnectionError(CoolMasterNetError, ConnectionError):
+    """The bridge could not be reached, or did not answer as expected.
+
+    Subclasses ConnectionError, and so OSError, so that callers already
+    catching those keep working.
+    """
+
+
+class CoolMasterNetCommandError(CoolMasterNetError, ValueError):
+    """The bridge rejected a command.
+
+    Subclasses ValueError for backwards compatibility, which also keeps the
+    ls2/stat2 fallback in _status working.
+    """
+
+
 class CoolMasterNet():
     """A connection to a coolmasternet bridge."""
     def __init__(self, host, port=10102, read_timeout=1, swing_support=False, send_initial_line_feed=False):
@@ -41,12 +62,12 @@ class CoolMasterNet():
                     writer.write(("\n").encode("ascii"))
                     prompt = await asyncio.wait_for(reader.readuntil((b"\r\n>", b">>")), self._read_timeout)
                     if prompt not in (b"\r\n>", b">>"):
-                        raise ConnectionError("CoolMasterNet prompt not found")
+                        raise CoolMasterNetConnectionError("CoolMasterNet prompt not found")
 
                 else:
                     prompt = await asyncio.wait_for(reader.readuntil(b">"), self._read_timeout)
                     if prompt != b">":
-                        raise ConnectionError("CoolMasterNet prompt not found")
+                        raise CoolMasterNetConnectionError("CoolMasterNet prompt not found")
 
                 writer.write((request + "\n").encode("ascii"))
                 response = await asyncio.wait_for(reader.readuntil(b"\n>"), self._read_timeout)
@@ -61,7 +82,7 @@ class CoolMasterNet():
 
                 if "Unknown command" in data:
                     cmd = request.split(" ", 1)[0]
-                    raise ValueError(f"Command '{cmd}' is not supported")
+                    raise CoolMasterNetCommandError(f"Command '{cmd}' is not supported")
 
                 return data
             finally:
@@ -92,7 +113,7 @@ class CoolMasterNet():
             except ValueError:
                 continue
         else:
-            raise Exception("failed to execute status commands")
+            raise CoolMasterNetError("failed to execute status commands")
 
         return cmd, status_lines
 
@@ -136,7 +157,7 @@ class CoolMasterNetUnit():
         fields = re.split(r"\s+", self._raw.strip())
 
         if len(fields) not in (8, 9):
-            raise ConnectionError("Unexpected status line format: " + str(fields))
+            raise CoolMasterNetConnectionError("Unexpected status line format: " + str(fields))
 
         self._is_on = fields[1] == "ON"
         self._temperature_unit = "imperial" if fields[2][-1] == "F" else "celsius"
@@ -234,7 +255,7 @@ class CoolMasterNetUnit():
 
         return_value = await self._make_unit_request(f"swing UID {_SWING_NAME_TO_CHAR[value]}")
         if return_value.startswith("Unsupported Feature"):
-            raise ValueError(
+            raise CoolMasterNetCommandError(
                 f"Unit {self._unit_id} doesn't support swing mode {value}."
             )
 
