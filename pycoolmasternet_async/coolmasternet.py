@@ -241,7 +241,16 @@ class CoolMasterNetUnit():
     
     async def set_fan_speed(self, value):
         """Set the fan speed."""
-        await self._make_unit_request(f"fspeed UID {value}")
+        return_value = await self._make_unit_request(f"fspeed UID {value}")
+        if return_value.startswith("Unsupported Feature"):
+            raise CoolMasterNetCommandError(
+                f"Unit {self._unit_id} doesn't support fan speed {value}."
+            )
+        if return_value.startswith("Bad Format"):
+            raise CoolMasterNetCommandError(
+                f"Unrecognized fan speed {value}."
+            )
+
         return await self.refresh()
 
     async def set_mode(self, value):

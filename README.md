@@ -48,7 +48,9 @@ unit.is_on
 unit = await unit.turn_on()
 unit = await unit.turn_off()
 
-# Fan speed: low, med, high, auto
+# Fan speed: vlow, low, med, high, top, auto
+# Which of these an indoor unit actually accepts varies. Setting a speed the
+# unit doesn't support raises CoolMasterNetCommandError.
 unit.fan_speed
 unit = await unit.set_fan_speed('med')
 
