@@ -15,6 +15,19 @@ _SWING_CHAR_TO_NAME = {
 
 _SWING_NAME_TO_CHAR = {value: key for key, value in _SWING_CHAR_TO_NAME.items()}
 
+# Characters the bridge only ever reports, never accepts. `query <uid> s`
+# answers "-" for a unit whose swing is stopped or was never set, while stop
+# is still set with "x". Kept out of _SWING_NAME_TO_CHAR so the write path is
+# unchanged, and out of SWING_MODES so "stop" isn't offered twice.
+_SWING_READ_ONLY_CHAR_TO_NAME = {
+    "-": "stop",
+}
+
+_SWING_CHAR_TO_NAME_FOR_READ = {
+    **_SWING_CHAR_TO_NAME,
+    **_SWING_READ_ONLY_CHAR_TO_NAME,
+}
+
 SWING_MODES = list(_SWING_CHAR_TO_NAME.values())
 
 
@@ -171,7 +184,7 @@ class CoolMasterNetUnit():
         # field. The 8-field form (stat2) stops at the filter sign, so demand
         # is unknown there rather than assumed to be off.
         self._demand = fields[8] != "0" if len(fields) > 8 else None
-        self._swing = _SWING_CHAR_TO_NAME.get(self._swing_raw)
+        self._swing = _SWING_CHAR_TO_NAME_FOR_READ.get(self._swing_raw)
 
     async def _make_unit_request(self, request):
         return await self._bridge._make_request(request.replace("UID", self._unit_id))
@@ -241,7 +254,16 @@ class CoolMasterNetUnit():
     
     async def set_fan_speed(self, value):
         """Set the fan speed."""
-        await self._make_unit_request(f"fspeed UID {value}")
+        return_value = await self._make_unit_request(f"fspeed UID {value}")
+        if return_value.startswith("Unsupported Feature"):
+            raise CoolMasterNetCommandError(
+                f"Unit {self._unit_id} doesn't support fan speed {value}."
+            )
+        if return_value.startswith("Bad Format"):
+            raise CoolMasterNetCommandError(
+                f"Unrecognized fan speed {value}."
+            )
+
         return await self.refresh()
 
     async def set_mode(self, value):
